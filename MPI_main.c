@@ -82,9 +82,12 @@ int main(int argc, char **argv)
 	char *alph = argv[3];
 	
 	for (int i = 1; i <= maxlength; i++) {
-		if (rank == 0)
+		if (rank == 0) {
 			init_key(key, alph[0], i);
+			MPI_Bcast(key, i, MPI_CHAR, rank, MPI_COMM_WORLD);
+		}
 		backtracking(hash, alph, key, i, 0, rank, commsize);
+		MPI_Bcast(key, i, MPI_CHAR, rank, MPI_COMM_WORLD);
 	}
 	
 	MPI_Finalize();
