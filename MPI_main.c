@@ -17,15 +17,15 @@ int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind, 
 	int s = strlen(alph);
 	
 	int lb = rank * s / commsize;
-	int ub = (rank == commsize - 1) ? s : lb + s / commsize;
+	int ub = (rank == commsize - 1) ? s - 1 : lb + s / commsize - 1;
 	
-	for (int i = lb; i < ub; i++) {
-		if (success == 1)
-			break;
+	for (int i = lb; i <= ub; i++) {
+		//if (success == 1)
+			//break;
 		
 		if (key[ind] == alph[i]) {
 			if (size > 1 && ind != size - 1)
-				backtracking(hash, alph, key, size, ind + 1, j);
+				backtracking(hash, alph, key, size, ind + 1, rank, commsize);
 			continue;
 		}
 
@@ -38,12 +38,11 @@ int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind, 
 			success = 1;
 			break;
 		}*/
-		*j += 1;
 		
 		if (ind == size - 1)
 			continue;
 		
-		backtracking(hash, alph, key, size, ind + 1, j);
+		backtracking(hash, alph, key, size, ind + 1, rank, commsize);
 	}
 	
 	key[ind] = alph[0];
@@ -65,14 +64,13 @@ int main(int argc, char **argv)
 	int rank, commsize;
 	
 	MPI_Init(&argc, &argv);
-	MPI_Commsize(MPI_COMM_WORLD, &commsize);
-	MPI_Commrank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	
 	int maxlength;
-	char *key;
 	
 	maxlength = atoi(argv[1]);
-	key = malloc(maxlength * sizeof(char));
+	char *key = calloc(maxlength, sizeof(char));
 	
 	unsigned char hash[MD5_DIGEST_LENGTH];
 	
@@ -82,12 +80,12 @@ int main(int argc, char **argv)
 	char *alph = argv[3];
 	
 	for (int i = 1; i <= maxlength; i++) {
-		if (rank == 0) {
-			init_key(key, alph[0], i);
+		init_key(key, alph[0], i);
+		for (int j = 0; j < commsize - 1; j++) {
 			MPI_Bcast(key, i, MPI_CHAR, rank, MPI_COMM_WORLD);
+			backtracking(hash, alph, key, i, 0, rank, commsize);
 		}
-		backtracking(hash, alph, key, i, 0, rank, commsize);
-		MPI_Bcast(key, i, MPI_CHAR, rank, MPI_COMM_WORLD);
+		//printf("%s\n", key);
 	}
 	
 	MPI_Finalize();

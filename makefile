@@ -4,7 +4,7 @@ CFLAGS := -std=c99
 LFLAGS := -lcrypto -lm
 
 .PHONY: all
-all: hash
+all: hash phash
 
 hash: main.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LFLAGS)
