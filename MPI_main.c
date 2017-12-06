@@ -12,20 +12,17 @@ void init_key(char *key, char c, int s)
 		key[i] = c;
 }
 
-int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind, int rank, int commsize)
+int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind)
 {
 	int s = strlen(alph);
-	
-	int lb = rank * s / commsize;
-	int ub = (rank == commsize - 1) ? s - 1 : lb + s / commsize - 1;
-	
-	for (int i = lb; i <= ub; i++) {
+		
+	for (int i = 0; i < s; i++) {
 		//if (success == 1)
 			//break;
 		
 		if (key[ind] == alph[i]) {
 			if (size > 1 && ind != size - 1)
-				backtracking(hash, alph, key, size, ind + 1, rank, commsize);
+				backtracking(hash, alph, key, size, ind + 1);
 			continue;
 		}
 
@@ -42,7 +39,7 @@ int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind, 
 		if (ind == size - 1)
 			continue;
 		
-		backtracking(hash, alph, key, size, ind + 1, rank, commsize);
+		backtracking(hash, alph, key, size, ind + 1);
 	}
 	
 	key[ind] = alph[0];
@@ -81,11 +78,8 @@ int main(int argc, char **argv)
 	
 	for (int i = 1; i <= maxlength; i++) {
 		init_key(key, alph[0], i);
-		for (int j = 0; j < commsize - 1; j++) {
-			MPI_Bcast(key, i, MPI_CHAR, rank, MPI_COMM_WORLD);
+		if (rank % commsize == i % maxlength)
 			backtracking(hash, alph, key, i, 0, rank, commsize);
-		}
-		//printf("%s\n", key);
 	}
 	
 	MPI_Finalize();
