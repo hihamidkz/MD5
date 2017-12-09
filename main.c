@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/md5.h>
+#include <sys/time.h>
 
-int success = -1;
+//int success = -1;
 
 void init_key(char *key, char c, int s)
 {	
@@ -11,35 +12,38 @@ void init_key(char *key, char c, int s)
 		key[i] = c;
 }
 
-int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind, int *j)
+double wtime()
+{
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	return (double)t.tv_sec + (double)t.tv_usec * 1E-6;
+}
+
+int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind)
 {
 	int s = strlen(alph);
 	
 	for (int i = 0; i < s; i++) {
-		if (success == 1)
-			break;
+		//if (success == 1)
+			//break;
 		
 		if (key[ind] == alph[i]) {
 			if (size > 1 && ind != size - 1)
-				backtracking(hash, alph, key, size, ind + 1, j);
+				backtracking(hash, alph, key, size, ind + 1);
 			continue;
 		}
 
 		key[ind] = alph[i];
-		printf("%s\n", key);
-		/*unsigned char md5digest[MD5_DIGEST_LENGTH];
+		//printf("%s\n", key);
+		unsigned char md5digest[MD5_DIGEST_LENGTH];
 		MD5(key, size, md5digest);
-		if (strcmp(hash, md5digest) == 0) {
+		if (strncmp(hash, md5digest, MD5_DIGEST_LENGTH) == 0)
 			printf("Found key: %s\n", key);
-			success = 1;
-			break;
-		}*/
-		*j += 1;
 		
 		if (ind == size - 1)
 			continue;
 		
-		backtracking(hash, alph, key, size, ind + 1, j);
+		backtracking(hash, alph, key, size, ind + 1);
 	}
 	
 	key[ind] = alph[0];
@@ -72,14 +76,13 @@ int main(int argc, char **argv)
 	
 	char *alph = argv[3];
 	
-	int j = 0;
-	
+	double t = wtime();
 	for (int i = 1; i <= maxlength; i++) {
 		init_key(key, alph[0], i);
-		backtracking(hash, alph, key, i, 0, &j);
+		backtracking(hash, alph, key, i, 0);
 	}
-
-	printf("%d\n", j);
+	t = wtime() - t;
+	printf("t = %.6f\n", t);
 	return 0;
 }
 

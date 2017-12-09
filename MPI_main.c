@@ -27,14 +27,11 @@ int backtracking(unsigned char *hash, char *alph, char *key, int size, int ind)
 		}
 
 		key[ind] = alph[i];
-		printf("%s\n", key);
-		/*unsigned char md5digest[MD5_DIGEST_LENGTH];
+		//printf("%s\n", key);
+		unsigned char md5digest[MD5_DIGEST_LENGTH];
 		MD5(key, size, md5digest);
-		if (strcmp(hash, md5digest) == 0) {
+		if (strncmp(hash, md5digest, MD5_DIGEST_LENGTH) == 0)
 			printf("Found key: %s\n", key);
-			success = 1;
-			break;
-		}*/
 		
 		if (ind == size - 1)
 			continue;
@@ -76,15 +73,22 @@ int main(int argc, char **argv)
 	
 	char *alph = argv[3];
 	
+	double t = MPI_Wtime();
 	for (int i = 1; i <= maxlength; i++) {
-		init_key(key, alph[0], i);
-		if (rank % commsize == i % maxlength)
-			backtracking(hash, alph, key, i, 0, rank, commsize);
+		if (rank % commsize == i % commsize) {
+			init_key(key, alph[0], i);
+			backtracking(hash, alph, key, i, 0);
+		}
 	}
-	
+	t = MPI_Wtime() - t;
+	double gt = 0.0;
+	MPI_Reduce(&t, &gt, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	if (rank == 0)
+		printf("t = %.6f\n", gt);
 	MPI_Finalize();
 	return 0;
 }
+
 
 
 
