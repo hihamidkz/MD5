@@ -1,0 +1,8 @@
+#PBS -q release
+#PBS -N mpi
+#PBS -l nodes=1:ppn=1
+#PBS -j oe
+
+cd $PBS_O_WORKDIR
+
+./hash 10 781e5e245d69b566979b86e28d23f2c7 0123456789
